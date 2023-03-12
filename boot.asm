@@ -25,7 +25,7 @@ call read_disk
 
 cmp word [0x1000], 0x55aa; 比较0x1000位置和0x55aa
 jnz error;不相等跳转到error
-jmp 0:0x1002; 相等跳转到1002的位置
+jmp 0:0x1002; 相等跳转到1002的位置,也就是loader代码
 
 
 mov si, readend
