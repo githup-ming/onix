@@ -18,23 +18,17 @@ call print
 xchg bx, bx; bochs 魔术断点
 
 mov edi, 0x1000;读取目标内存
-mov ecx, 0;起始扇区
-mov bl, 1;扇区数量
+mov ecx, 2;起始扇区
+mov bl, 4;扇区数量
 
 call read_disk
 
+cmp word [0x1000], 0x55aa; 比较0x1000位置和0x55aa
+jnz error;不相等跳转到error
+jmp 0:0x1002; 相等跳转到1002的位置
+
+
 mov si, readend
-call print
-
-xchg bx, bx; bochs 魔术断点
-
-mov edi, 0x1000;读取目标内存
-mov ecx, 2;起始扇区
-mov bl, 1;扇区数量
-
-call write_disk
-
-mov si, writeend
 call print
 
 xchg bx, bx; bochs 魔术断点
@@ -117,75 +111,6 @@ read_disk:
 
 
 
-write_disk:
-    ;设置读写扇区的数量
-    mov dx, 0x1f2
-    mov al, bl
-    out dx, al
-
-    inc dx;0x1f3
-    mov al, cl; 起始扇区的前8位
-    out dx, al
-
-    inc dx;0x1f4
-    shr ecx, 8
-    mov al, cl; 起始扇区的中8位
-    out dx, al
-
-    inc dx;0x1f5
-    shr ecx, 8
-    mov al, cl; 起始扇区的高8位
-    out dx, al
-
-    inc dx; 0x1f6
-    shr ecx,8
-    and cl, 0b1111; 将高4位置0
-
-    mov al, 0b11100_0000
-    or al, cl
-    out dx, al;  主盘LBA模式
-
-    inc dx; 0x1f7
-    mov al, 0x30
-    out dx, al; 写硬盘
-
-    xor ecx, ecx; 将ecx清空
-    mov cl, bl; 得到读写扇区的数量
-
-    .write:
-    push cx; 保存cx
-    call .writes; 写一个扇区
-    call .waits; 等待数据准备完毕
-    pop cx
-    loop .write
-
-    ret
-
-    .waits:
-        mov dx, 0x1f7
-        .check:
-            in al, dx
-            jmp $+2; nop
-            jmp $+2
-            jmp $+2
-            and al, 0b1000_1000
-            cmp al, 0b0000_0000
-            jnz .check
-        ret
-
-    .writes:
-        mov dx, 0x1f0
-        mov cx, 256; 一个扇区256个字节
-        .writew:
-            mov ax, [edi]
-            out dx, ax
-            jmp $+2; nop
-            jmp $+2
-            jmp $+2
-            add edi, 2
-            loop .writew
-        ret
-
 print:
     mov ah, 0x0e
 .next:
@@ -197,6 +122,14 @@ print:
     jmp .next
 .done:
     ret
+
+error:
+    mov si, .msg
+    call print
+    hlt; 让CPU停止
+    jmp $
+    .msg db "booting error", 10, 13, 0;\n \r
+
 
 booting:
     db "Booting Onix...", 10, 13, 0;\n \r
