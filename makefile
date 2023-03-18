@@ -1,4 +1,4 @@
-BUILD:=../build
+BUILD:=./build
 SRC:=.
 
 ENTRYPOINT:=0x10000
