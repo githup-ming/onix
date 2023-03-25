@@ -4,9 +4,10 @@
 00010019 t print.done
 0001001a t bootkernel
 00010029 T kernel_init
-00012000 D magic
-00012004 D message
-00012012 B __bss_start
-00012012 D _edata
-00012020 B buf
-00012420 B _end
+000100d0 T inb
+000100e1 T outb
+000100f3 T inw
+00010105 T outw
+00012000 R __bss_start
+00012000 R _edata
+00012000 R _end
