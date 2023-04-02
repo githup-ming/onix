@@ -1,5 +1,6 @@
 #include <onix/console.h>
 #include <onix/io.h>
+#include <onix/string.h>
 
 #define CRT_ADDR_REG 0x3D4 // CRT(6845)索引寄存器
 #define CRT_DATA_REG 0x3D5 // CRT(6845)数据寄存器
@@ -10,7 +11,7 @@
 #define CRT_CURSOR_L 0xF     // 光标位置 - 低位
 
 #define MEM_BASE 0xB8000              // 显卡内存起始位置
-#define MEM_SIZE 0x4000               // 显卡内存大小
+#define MEM_SIZE 0x4000 - 64               // 显卡内存大小，4整屏余2行，余下64字节不要了不够1行
 #define MEM_END (MEM_BASE + MEM_SIZE) // 显卡内存结束位置
 #define WIDTH 80                      // 屏幕文本列数
 #define HEIGHT 25                     // 屏幕文本行数
@@ -48,14 +49,100 @@ struct console
 struct console console;
 
 
+//获取屏幕开始的内存位置
+static u32 get_screen()
+{
+    u32 screen = 0;
+    outb(CRT_ADDR_REG, CRT_START_ADDR_H);
+    screen = inb(CRT_DATA_REG) << 8;
+    outb(CRT_ADDR_REG,CRT_START_ADDR_L);
+    screen |= inb(CRT_DATA_REG);
+
+    screen = screen * 2 + MEM_BASE;
+
+    return screen;
+}
+//获取当前光标的内存位置
+static u32 get_cursor()
+{
+    u32 pos = 0;
+    outb(CRT_ADDR_REG, CRT_CURSOR_H);
+    pos = inb(CRT_DATA_REG) << 8;
+    outb(CRT_ADDR_REG,CRT_CURSOR_L);
+    pos |= inb(CRT_DATA_REG);
+
+    pos = pos * 2 + MEM_BASE;//一个字符占2个字节（字符，样式）
+
+    return pos;
+}
+//光标内存位置转换为屏幕坐标
+static struct point pos_to_xy(u32 pos)
+{
+    struct point point;
+    pos = (pos - MEM_BASE) / 2;
+
+    point.x = pos % WIDTH;
+    point.y = pos / WIDTH;
+
+    return point;
+}
+
+//设置屏幕光标位置
+static void set_cursor(struct point xy)
+{
+    if (xy.x >= WIDTH) {
+        xy.x = WIDTH - 1;
+    }
+    if (xy.y >= MEM_SIZE / ROW_SIZE ) {//<=101
+        xy.y = MEM_SIZE / ROW_SIZE - 1;
+    }
+    u16 point = xy.y * 80 + xy.x;
+
+    outb(CRT_ADDR_REG, CRT_CURSOR_H);
+    outb(CRT_DATA_REG, (point >> 8) & 0xff);
+    outb(CRT_ADDR_REG, CRT_CURSOR_L);
+    outb(CRT_DATA_REG, point & 0xff);
+}
+//设置屏幕开始坐标位置
+static void set_screen(u32 mem)
+{
+    // if (xy.x >= WIDTH) {
+    //     xy.x = WIDTH - 1;
+    // }
+    // if (xy.y >= MEM_SIZE / ROW_SIZE - HEIGHT) {//<=77
+    //     xy.y = MEM_SIZE / ROW_SIZE - HEIGHT;
+    // }
+    // u16 point = xy.y * 80 + xy.x;
+    u16 point = (mem - MEM_BASE) / 2;
+
+    outb(CRT_ADDR_REG, CRT_START_ADDR_H);
+    outb(CRT_DATA_REG, point >> 8);
+    outb(CRT_ADDR_REG, CRT_START_ADDR_L);
+    outb(CRT_DATA_REG, point & 0xff);
+
+    console.screen = mem;
+}
 
 static void command_lf()
 {
-    if (console.xy.y + 1 < HEIGHT) {
+    if (console.pos < (MEM_END - ROW_SIZE)) {
         console.xy.y++;
         console.pos += ROW_SIZE;
-    }
+        if ((console.pos - console.screen) > (SCR_SIZE -ROW_SIZE)) {
+            set_screen(console.screen + ROW_SIZE);
+        }
+    } else {
+        memcpy((void *)MEM_BASE, (void *)console.screen, SCR_SIZE);
+        u16 *ptr = (u16 *)(MEM_BASE + SCR_SIZE);
 
+        while ((u32)ptr < MEM_END){
+            *ptr++ = erase;
+        }
+
+        set_screen(MEM_BASE + ROW_SIZE);
+        console.pos -= (MEM_SIZE - SCR_SIZE - ROW_SIZE);
+        console.xy = pos_to_xy(console.pos);
+    }
 }
 
 static void command_cr()
@@ -80,100 +167,55 @@ static void command_del()
 
 
 
-//获取屏幕开始的内存位置
-static u32 get_screen()
-{
-    u32 screen = 0;
-    outb(CRT_ADDR_REG, CRT_START_ADDR_H);
-    screen = inb(CRT_DATA_REG) << 8;
-    outb(CRT_ADDR_REG,CRT_START_ADDR_L);
-    screen |= inb(CRT_DATA_REG);
-
-    screen = screen * 2 + MEM_BASE;
-
-    return screen;
-
-}
-//获取当前光标的内存位置
-static u32 get_cursor()
-{
-    u32 pos = 0;
-    outb(CRT_ADDR_REG, CRT_CURSOR_H);
-    pos = inb(CRT_DATA_REG) << 8;
-    outb(CRT_ADDR_REG,CRT_CURSOR_L);
-    pos |= inb(CRT_DATA_REG);
-
-    pos = pos * 2 + get_screen();//一个字符占2个字节（字符，样式）
-    return pos;
-}
-//光标内存位置转换为屏幕坐标
-static struct point pos_to_xy(u32 pos)
-{
-    struct point point;
-    pos = (pos - get_screen()) / 2;
-
-    point.x = pos % WIDTH;
-    point.y = pos / WIDTH;
-
-    return point;
-}
-//光标坐标转换为内存位置
-static u32 xy_to_pos(struct point point)
-{   
-    return (point.y * WIDTH + point.x) * 2 + get_screen();
-}
-//设置屏幕光标位置
-static void set_cursor(struct point xy)
-{
-    if (xy.x >= WIDTH) {
-        xy.x = WIDTH - 1;
-    }
-    if (xy.y >= HEIGHT) {
-        xy.y = HEIGHT - 1;
-    }
-    u16 point = xy.y * 80 + xy.x;
-
-    outb(CRT_ADDR_REG, CRT_CURSOR_H);
-    outb(CRT_DATA_REG, point >> 8);
-    outb(CRT_ADDR_REG, CRT_CURSOR_L);
-    outb(CRT_DATA_REG, point & 0xff);
-}
-//设置屏幕开始坐标位置
-static void set_screen(struct point xy)
-{
-    if (xy.x >= WIDTH) {
-        xy.x = WIDTH - 1;
-    }
-    if (xy.y >= HEIGHT) {
-        xy.y = HEIGHT - 1;
-    }
-    u16 point = xy.y * 80 + xy.x;
-
-    outb(CRT_ADDR_REG, CRT_START_ADDR_H);
-    outb(CRT_DATA_REG, point >> 8);
-    outb(CRT_ADDR_REG, CRT_START_ADDR_L);
-    outb(CRT_DATA_REG, point & 0xff);
-}
 void console_init()
 {
     console_clear();
-    // set_cursor(40, 5);
-    // set_screen(0, 8);
+
     console.screen = get_screen();
     console.pos = get_cursor();
     console.xy = pos_to_xy(console.pos);
+    // console.xy.x = 0;
+    // console.xy.y = 77;
+    // set_screen(console.xy);
+    // console.xy.x = 79;
+    // console.xy.y = 100;
+    // set_cursor(console.xy);
 
+    // console.screen = get_screen();
+    // console.xy = pos_to_xy(console.screen);
+    // console.pos = get_cursor();
+    // console.xy = pos_to_xy(console.pos);
 
 }
 
 void console_clear()
 {
-    u16 *ptr = (u16 *)get_screen();
-    struct point xy = pos_to_xy(ptr);
+    // u8 *ptr = (u8 *)MEM_BASE;
+    u16 *ptr = (u16 *)MEM_BASE;
+    struct point xy = pos_to_xy((u32)ptr);
 
-    while (ptr < MEM_END){
+    while ((u32)ptr < MEM_END){
         *ptr++ = erase;
     }
+
+    // u32 point = 0;
+
+    // for (int i = MEM_BASE; i < MEM_END; i+=160) {
+    //     u8 point_0 = point%10;
+    //     u8 point_8 = (point / 10) % 10;
+    //     u8 point_16 = (point / 100) % 10;
+    //     u8 point_24 = (point / 1000) % 10;
+    //     point++;
+    //     ptr = (u8 *)i;
+    //     *ptr++ = point_24 + 48;
+    //     *ptr++ = 0x7;
+    //     *ptr++ = point_16 + 48;
+    //     *ptr++ = 0x7;
+    //     *ptr++ = point_8 + 48;
+    //     *ptr++ = 0x7;
+    //     *ptr++ = point_0 + 48;
+    //     *ptr++ = 0x7;
+    // }
 
     set_cursor(xy);
 }
@@ -181,7 +223,6 @@ void console_clear()
 void console_write(int8 *buf, u32 count)
 {
     int8 ch;
-    int8 *ptr = (int8 *)console.pos;
     while (count--)
     {
         ch = *buf++;
@@ -216,16 +257,26 @@ void console_write(int8 *buf, u32 count)
                 command_del();
                 break;
             default:
-                if (console.xy.x >= WIDTH) {
-                    console.xy.x -= WIDTH;
-                    console.pos -= ROW_SIZE;
-                    command_lf();
-                }
-                *ptr++ = ch;
-                *ptr++ = attr;
-                console.pos += 2;
-                console.xy = pos_to_xy(console.pos);
+                *(u8 *)console.pos++ = ch;
+                *(u8 *)console.pos++ = attr;
 
+                if (console.pos < MEM_END ) {
+                    console.xy = pos_to_xy(console.pos);
+                    if (console.pos - console.screen >= SCR_SIZE) {
+                        set_screen(console.screen + ROW_SIZE);
+                    }
+                } else {
+                    memcpy((void *)MEM_BASE, (void *)console.screen, SCR_SIZE);
+                    u16 *ptr = (u16 *)(MEM_BASE + SCR_SIZE);
+
+                    while ((u32)ptr < MEM_END){
+                        *ptr++ = erase;
+                    }
+
+                    set_screen(MEM_BASE + ROW_SIZE);
+                    console.pos -= (MEM_SIZE - SCR_SIZE);
+                    console.xy = pos_to_xy(console.pos);
+                }
                 break;
         }
         set_cursor(console.xy);
