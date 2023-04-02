@@ -7,7 +7,7 @@
 #include <onix/assert.h>
 #include <onix/debug.h>
 #include <onix/global.h>
-
+#include <onix/task.h>
 
 
 void kernel_init()
@@ -15,6 +15,8 @@ void kernel_init()
 
     console_init();
     gdt_init();
+
+    task_init();
 
     BMB;
 
