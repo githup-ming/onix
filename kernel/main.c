@@ -5,16 +5,19 @@
 #include <onix/stdarg.h>
 #include <onix/printk.h>
 #include <onix/assert.h>
+#include <onix/debug.h>
+
 
 void kernel_init()
 {
 
     console_init();
 
-    assert(3 < 5);  
-    // assert(3 > 5);
+    DEBUGK("43241\n");
 
-    panic("-----------------");
+    BMB;
+
+    DEBUGK("abcd\n");
     
 
     return;
