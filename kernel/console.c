@@ -40,14 +40,7 @@ struct console
     struct point xy; //当前光标的坐标
 };
 
-    // u32 screen; //当前显示器开始内存位置
-    // u32 pos; //记录当前光标位置
-
-    // u32 x;
-    // u32 y; //当前光标的坐标
-
 struct console console;
-
 
 //获取屏幕开始的内存位置
 static u32 get_screen()
@@ -106,13 +99,6 @@ static void set_cursor(struct point xy)
 //设置屏幕开始坐标位置
 static void set_screen(u32 mem)
 {
-    // if (xy.x >= WIDTH) {
-    //     xy.x = WIDTH - 1;
-    // }
-    // if (xy.y >= MEM_SIZE / ROW_SIZE - HEIGHT) {//<=77
-    //     xy.y = MEM_SIZE / ROW_SIZE - HEIGHT;
-    // }
-    // u16 point = xy.y * 80 + xy.x;
     u16 point = (mem - MEM_BASE) / 2;
 
     outb(CRT_ADDR_REG, CRT_START_ADDR_H);
@@ -174,48 +160,16 @@ void console_init()
     console.screen = get_screen();
     console.pos = get_cursor();
     console.xy = pos_to_xy(console.pos);
-    // console.xy.x = 0;
-    // console.xy.y = 77;
-    // set_screen(console.xy);
-    // console.xy.x = 79;
-    // console.xy.y = 100;
-    // set_cursor(console.xy);
-
-    // console.screen = get_screen();
-    // console.xy = pos_to_xy(console.screen);
-    // console.pos = get_cursor();
-    // console.xy = pos_to_xy(console.pos);
-
 }
 
 void console_clear()
 {
-    // u8 *ptr = (u8 *)MEM_BASE;
     u16 *ptr = (u16 *)MEM_BASE;
     struct point xy = pos_to_xy((u32)ptr);
 
     while ((u32)ptr < MEM_END){
         *ptr++ = erase;
     }
-
-    // u32 point = 0;
-
-    // for (int i = MEM_BASE; i < MEM_END; i+=160) {
-    //     u8 point_0 = point%10;
-    //     u8 point_8 = (point / 10) % 10;
-    //     u8 point_16 = (point / 100) % 10;
-    //     u8 point_24 = (point / 1000) % 10;
-    //     point++;
-    //     ptr = (u8 *)i;
-    //     *ptr++ = point_24 + 48;
-    //     *ptr++ = 0x7;
-    //     *ptr++ = point_16 + 48;
-    //     *ptr++ = 0x7;
-    //     *ptr++ = point_8 + 48;
-    //     *ptr++ = 0x7;
-    //     *ptr++ = point_0 + 48;
-    //     *ptr++ = 0x7;
-    // }
 
     set_cursor(xy);
 }
@@ -281,5 +235,4 @@ void console_write(int8 *buf, u32 count)
         }
         set_cursor(console.xy);
     }
-    
 }
