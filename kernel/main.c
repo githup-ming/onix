@@ -6,20 +6,21 @@
 #include <onix/printk.h>
 #include <onix/assert.h>
 #include <onix/debug.h>
+#include <onix/global.h>
+
 
 
 void kernel_init()
 {
 
     console_init();
-
-    DEBUGK("43241\n");
+    gdt_init();
 
     BMB;
 
-    DEBUGK("abcd\n");
-    
 
+
+    DEBUGK("kernel_init end\n");
     return;
 
 }
