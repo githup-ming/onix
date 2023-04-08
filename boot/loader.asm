@@ -5,7 +5,7 @@ dw 0x55aa; 魔数 用于判断错误
 mov si, loading
 call print
 
-xchg bx, bx; bochs 魔术断点
+; xchg bx, bx; bochs 魔术断点
 
 detect_memory:
     ; 将ebx置位0
@@ -33,7 +33,7 @@ detect_memory:
     mov si, detecting
     call print
 
-    xchg bx, bx; bochs 魔术断点
+    ; xchg bx, bx; bochs 魔术断点
 
     ; mov byte [0xb8000], 'P'
 
@@ -105,7 +105,7 @@ protect_mode:
     call read_disk
 
     mov byte [0xb8000], 'L'
-    xchg bx, bx; bochs 魔术断点
+    ; xchg bx, bx; bochs 魔术断点
 
     jmp dword code_selector:0x10000; 跳转到代码段
 

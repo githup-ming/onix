@@ -15,7 +15,7 @@ mov sp, 0x7c00
 mov si, booting
 call print
 
-xchg bx, bx; bochs 魔术断点
+; xchg bx, bx; bochs 魔术断点
 
 mov edi, 0x1000;把硬盘中的数据读取0x1000内存中
 mov ecx, 2;硬盘的起始扇区
@@ -31,7 +31,7 @@ jmp 0:0x1002; 相等跳转到1002的位置,也就是loader代码
 mov si, readend
 call print
 
-xchg bx, bx; bochs 魔术断点
+; xchg bx, bx; bochs 魔术断点
 
 mov si, bootend
 call print
