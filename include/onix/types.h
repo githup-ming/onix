@@ -22,4 +22,7 @@ typedef unsigned long long u64;
 
 typedef char *va_list;
 
+typedef void *handler_t; // 中断处理函数
+
+
 #endif
