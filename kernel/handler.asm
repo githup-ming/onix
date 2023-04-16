@@ -7,6 +7,7 @@ section .text
 
 %macro INTERRUPT_HANDLER 2
 interrupt_handler_%1:
+    xchg bx, bx; 断点
 %ifn %2
     push 0x20222202; 占位
 %endif
@@ -15,13 +16,30 @@ interrupt_handler_%1:
 %endmacro
 
 interrupt_entry:
+;保存上文寄存器
+    push ds
+    push es
+    push fs
+    push gs
+    pusha
 
-    mov eax, [esp]; esp是最后压入栈的数据，对应上面的push 1%
+    mov eax, [esp + 12 * 4]; esp是最后压入栈的数据，对应上面的push 1%
+
+    push eax; 向中断函数提供参数
 
     ; 调用中断处理函数，handler_table 中储存了中断处理函数的指针
     call [handler_table + eax * 4]
-    ; 对应push %1 调用结束恢复栈
-    add esp, 8
+
+    add esp, 4; 对应push eax
+;恢复下文寄存器
+    popa
+    pop gs
+    pop fs
+    pop es
+    pop ds
+
+    add esp, 8; 对应push %1 ,error
+
     iret
 
 INTERRUPT_HANDLER 0x00, 0; 除0 异常

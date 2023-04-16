@@ -9,6 +9,8 @@
 #define false 0
 
 #define _packed __attribute__((packed)) //用于定义特殊的结构
+#define _ofp __attribute__((optimize("omit-frame-pointer"))) // 用于省略函数的栈帧
+
 typedef unsigned int size_t;
 typedef char int8;
 typedef short int16;

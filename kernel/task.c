@@ -26,24 +26,22 @@ void schedule()
     task_switch(next);
 }
 
-u32 thread_a()
+u32 _ofp thread_a()
 {
+    asm volatile("sti\n");
     while (true)
     {
         printk("a");
-        schedule();
     }
-    
 }
 
-u32 thread_b()
+u32 _ofp thread_b()
 {
+    asm volatile("sti\n");
     while (true)
     {
         printk("b");
-        schedule();
     }
-    
 }
 
 void task_creat(task_t *task, target_t targer)
