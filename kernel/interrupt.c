@@ -4,6 +4,7 @@
 #include <onix/printk.h>
 #include <onix/stdlib.h>
 #include <onix/io.h>
+#include <onix/assert.h>
 
 #define ENTRY_SIZE 0x30
 
@@ -47,7 +48,7 @@ static int8 *messages[] = {
     "#CP Control Protection Exception\0",
 };
 
-static void send_eoi(u32 vector)
+void send_eoi(u32 vector)
 {
     if (vector >= 0x20 && vector < 0x28) {
         outb(PIC_M_CTRL, PIC_EOI);
@@ -59,12 +60,35 @@ static void send_eoi(u32 vector)
     
 }
 
-extern void schedule();
+void set_interrupt_handler(u32 irq, handler_t handler)
+{
+    assert(irq >= 0 && irq < 16);
+    handler_table[IRQ_MASTER_NR + irq] = handler;
+}
+
+void set_interrupt_mask(u32 irq, bool enable)
+{
+    assert(irq >= 0 && irq < 16);
+    u16 port;
+    if (irq < 8) {
+        port = PIC_M_DATA;
+    } else {
+        port = PIC_S_DATA;
+        irq -= 8;
+    }
+    if (enable) {
+        outb(port, inb(port) & ~(1 << irq));
+    } else {
+        outb(port, inb(port) | (1 << irq));
+    }
+}
+
+u32 counter = 0;
 
 static void default_handler(int32 vector)
 {
     send_eoi(vector);
-    schedule();
+    LOGK("[vector %d] default handler called %d \n", vector, counter++);
 }
 
 static void exception_handler(
@@ -106,7 +130,7 @@ static void pic_init()
     outb(PIC_S_DATA, 2);          // ICW3 设置从片连接到主片IR2 引脚
     outb(PIC_S_DATA, 0b00000001);  // ICW4 8086模式, 正常EOI
 
-    outb(PIC_M_DATA, 0b11111110); //关闭所有中断
+    outb(PIC_M_DATA, 0b11111111); //关闭所有中断
     outb(PIC_S_DATA, 0b11111111);
 }
 

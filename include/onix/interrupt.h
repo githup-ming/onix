@@ -4,6 +4,8 @@
 #include <onix/types.h>
 
 #define IDT_SIZE 256
+#define IRQ_MASTER_NR 0x20 //主片起始向量号
+#define IRQ_CLOCK 0 //时钟
 
 typedef struct gate_t {
     u16 offset0;//段内偏移0-15位
@@ -17,6 +19,8 @@ typedef struct gate_t {
 } _packed gate_t;
 
 void interrupt_init();
-
+void send_eoi(u32 vector);
+void set_interrupt_mask(u32 irq, bool enable);
+void set_interrupt_handler(u32 irq, handler_t handler);
 
 #endif
