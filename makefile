@@ -97,7 +97,9 @@ qemu: $(BUILD)/master.img
 	qemu-system-i386 \
 	-m 32M \
 	-boot c \
-	-hda $<
+	-drive file=$<,index=0,media=disk,format=raw \
+	-audiodev pa,id=hda \
+	-machine pcspk-audiodev=hda \
 
 .PHONY: qemug
 qemug: $(BUILD)/master.img
@@ -105,7 +107,9 @@ qemug: $(BUILD)/master.img
 	-m 32M \
 	-s -S \
 	-boot c \
-	-hda $<
+	-drive file=$<,index=0,media=disk,format=raw \
+	-audiodev pa,id=hda \
+	-machine pcspk-audiodev=hda \
 
 
 $(BUILD)/master.vmdk :$(BUILD)/master.img
