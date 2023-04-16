@@ -3,7 +3,7 @@
 #include <onix/debug.h>
 #include <onix/printk.h>
 
-#define ENTRY_SIZE 0x20
+#define ENTRY_SIZE 0x8f
 
 gate_t idt[IDT_SIZE];
 pointer_t idt_ptr;
@@ -11,7 +11,7 @@ pointer_t idt_ptr;
 handler_t handler_table[IDT_SIZE];
 extern handler_t handler_entry_table[ENTRY_SIZE];
 
-static char *messages[] = {
+static int8 *messages[] = {
     "#DE Divide Error\0",
     "#DB RESERVED\0",
     "--  NMI Interrupt\0",
@@ -45,7 +45,7 @@ void exception_handler(int vector)
         message = messages[15];
     }
 
-    printk("Exception : [0x%02X] %s \n", vector, messages[vector]);
+    printk("Exception : [0x%02X] %s \n", vector, message);
 
     while (true);
     
@@ -56,7 +56,7 @@ void interrupt_init()
 {
     DEBUGK("interrupt_init\n");
     
-    for (size_t i = 0; i < IDT_SIZE; i++) {
+    for (size_t i = 0; i < ENTRY_SIZE; i++) {
         gate_t *gate = &idt[i];
         handler_t handler = handler_entry_table[i];
 
@@ -65,11 +65,11 @@ void interrupt_init()
         gate->selector = 1 << 3;// 代码段
         gate->reserved = 0;
         gate->type = 0b1110; //中断门
-        gate->segment = 0;  //系统门
+        gate->segment = 0;  //系统段
         gate->DPL = 0; //内核态
         gate->present = 1;  //有效
     }
-    for (size_t i = 0; i < 0x20; i++) {
+    for (size_t i = 0; i < ENTRY_SIZE; i++) {
         handler_table[i] = exception_handler;
     }
     idt_ptr.base = (u32)idt;
