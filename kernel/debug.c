@@ -11,5 +11,5 @@ void debugk(int8 *file, u32 line, const int8 * fmt, ...)
     va_list args;
     va_start(args, fmt);
     vsprintf(buf, fmt, args);
-    printk("[%s :%d] %s", file, line, buf);
+    printk("[%s %d] %s", file, line, buf);
 }

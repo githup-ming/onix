@@ -2,27 +2,11 @@
 #include <onix/debug.h>
 #include <onix/stdlib.h>
 #include <onix/io.h>
+#include <onix/rtc.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
-#define CMOS_ADDR 0x70 // CMOS 地址寄存器
-#define CMOS_DATA 0x71 // CMOS 数据寄存器
 
-// 下面是 CMOS 信息的寄存器索引
-#define CMOS_SECOND 0x00  // (0 ~ 59)
-#define CMOS_MINUTE 0x02  // (0 ~ 59)
-#define CMOS_HOUR 0x04    // (0 ~ 23)
-#define CMOS_WEEKDAY 0x06 // (1 ~ 7) 星期天 = 1，星期六 = 7
-#define CMOS_DAY 0x07     // (1 ~ 31)
-#define CMOS_MONTH 0x08   // (1 ~ 12)
-#define CMOS_YEAR 0x09    // (0 ~ 99)
-#define CMOS_CENTURY 0x32 // 可能不存在
-#define CMOS_NMI 0x80
-
-#define MINUTE 60          // 每分钟的秒数
-#define HOUR (60 * MINUTE) // 每小时的秒数
-#define DAY (24 * HOUR)    // 每天的秒数
-#define YEAR (365 * DAY)   // 每年的秒数，以 365 天算
 
 // 每个月开始时的已经过去天数
 static int month[13] = {
@@ -155,11 +139,7 @@ int get_yday(tm *time)
 
     return res;
 }
-u8 cmos_read(u8 addr)
-{
-    outb(CMOS_ADDR, CMOS_NMI | addr);
-    return inb(CMOS_DATA);
-}
+
 void time_read_bcd(tm *time)
 {
     // CMOS 的访问速度很慢。为了减小时间误差，在读取了下面循环中所有数值后，
@@ -206,7 +186,7 @@ void time_init()
          time.tm_min,
          time.tm_sec);
 
-    hang();
+    // hang();
 }
 
 

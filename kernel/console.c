@@ -114,7 +114,7 @@ static void command_lf()
     if (console.pos < (MEM_END - ROW_SIZE)) {
         console.xy.y++;
         console.pos += ROW_SIZE;
-        if ((console.pos - console.screen) > (SCR_SIZE -ROW_SIZE)) {
+        if ((console.pos - console.screen) > SCR_SIZE) {
             set_screen(console.screen + ROW_SIZE);
         }
     } else {

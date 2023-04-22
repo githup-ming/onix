@@ -83,7 +83,7 @@ void set_interrupt_mask(u32 irq, bool enable)
     }
 }
 
-u32 counter = 0;
+static u32 counter = 0;
 
 static void default_handler(int32 vector)
 {
