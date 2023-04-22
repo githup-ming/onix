@@ -133,6 +133,64 @@ static void put_page(u32 addr)
 
 }
 
+u32 get_cr3()
+{
+    asm volatile("movl %cr3, %eax\n");
+}
+void set_cr3(u32 pde)
+{
+    ASSERT_PAGE(pde);
+    asm volatile("movl %%eax, %%cr3\n" ::"a"(pde));
+}
+
+//将 cr0的pe位置1，启用分页
+static void enable_page()
+{
+    //0x80000000
+    asm volatile(
+        "movl %cr0, %eax\n"
+        "orl $0x80000000, %eax\n"
+        "movl %eax, %cr0\n"
+    );
+}
+static void entry_init(page_entry_t *entry, u32 index)
+{
+    *(u32 *)entry = 0;
+    entry->present = 1;
+    entry->write = 1;
+    entry->user = 1;
+    entry->index = index;
+}
+// 内核页目录
+#define KERNEL_PAGE_DIR 0x200000
+// 内核页表
+#define KERNEL_PAGE_ENTRY 0x201000
+
+//初始化内存映射
+void mapping_init()
+{
+    page_entry_t *pde = (page_entry_t *)KERNEL_PAGE_DIR;
+    memset(pde, 0, PAGE_SIZE);
+
+    entry_init(&pde[0], IDX(KERNEL_PAGE_ENTRY));
+
+    page_entry_t *pte = (page_entry_t *)KERNEL_PAGE_ENTRY;
+    page_entry_t *entry;
+    for (size_t tidx = 0; tidx < 1024; tidx++)
+    {
+        entry = &pte[tidx];
+        entry_init(entry, tidx);
+        memory_map[tidx] = 1;//设置物理内存数组，该页被占用
+    }
+    LOGK("AAAAAAAAAAAAA");
+    BMB;
+    set_cr3((u32)pde);
+    BMB;
+    enable_page();
+    
+}
+
+
 void memory_test()
 {
     u32 pages[10];

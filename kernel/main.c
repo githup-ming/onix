@@ -18,16 +18,19 @@
 void kernel_init()
 {
     memory_map_init();
-
+    mapping_init();
     interrupt_init();
     // task_init();
     // clock_init();
     // time_init();
     // rtc_init();
 
-    memory_test();
+    // memory_test();
+    BMB;
+    int8 *ptr = (int8 *)(0x100000 * 20);
+    ptr[0] = 'a';
 
-    asm volatile("sti");//开中断
+    // asm volatile("sti");//开中断
     DEBUGK("kernel_init end\n");
     hang();
 }
