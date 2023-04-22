@@ -73,7 +73,6 @@ void set_alarm(u32 secs)
 }
 static void rtc_handler(u32 vector)
 {
-    BMB;
     // 实时时钟中断向量号
     assert(vector == 0x28);
 
@@ -97,7 +96,7 @@ void rtc_init()
     // set_alarm(5);
 
     // 设置中断频率
-    cmos_write(CMOS_A, (inb(CMOS_A) & 0xf) | 0b1110);
+    // cmos_write(CMOS_A, (inb(CMOS_A) & 0xf) | 0b1110);
     // hang();
     set_interrupt_handler(IRQ_RTC, rtc_handler);
     set_interrupt_mask(IRQ_RTC, true);

@@ -1,12 +1,16 @@
 #ifndef __TYPES_H__
 #define __TYPES_H__
 
+#include <onix/onix.h>
+
 #define EOF -1 //END OF FILE
 #define EOS '\0'  //字符串结束符
 #define NULL ((void *)0) //空指针
+#ifndef __cplusplus //兼容c++
 #define bool _Bool
 #define true 1
 #define false 0
+#endif
 
 #define _packed __attribute__((packed)) //用于定义特殊的结构
 #define _ofp __attribute__((optimize("omit-frame-pointer"))) // 用于省略函数的栈帧

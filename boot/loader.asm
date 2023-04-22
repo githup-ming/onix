@@ -25,7 +25,7 @@ detect_memory:
     jc error; 如果cf置位，表示出错
     add di, cx
 
-    inc word [ards_count]
+    inc dword [ards_count]
 
     cmp ebx, 0
     jnz .next
@@ -102,7 +102,11 @@ protect_mode:
     mov ecx, 10;硬盘的起始扇区
     mov bl, 200;读取硬盘的扇区数量
 
-    call read_disk
+    call read_disk; 读取内核
+
+    ;为了兼容grub
+    mov eax, 0x20230422; 内核魔数
+    mov ebx, ards_count; ards 数量指针 
 
     mov byte [0xb8000], 'L'
     ; xchg bx, bx; bochs 魔术断点
@@ -219,6 +223,6 @@ gdt_data:
 gdt_end:
 
 ards_count:
-    dw 0
+    dd 0
 
 ards_buffer:
