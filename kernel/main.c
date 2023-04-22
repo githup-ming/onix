@@ -11,6 +11,7 @@
 #include <onix/interrupt.h>
 #include <onix/stdlib.h>
 #include <onix/clock.h>
+#include <onix/time.h>
 
 void kernel_init()
 {
@@ -20,12 +21,9 @@ void kernel_init()
     interrupt_init();
     // task_init();
     clock_init();
+    time_init();
 
     asm volatile("sti");//开中断
-    
-
-
-
     DEBUGK("kernel_init end\n");
     hang();
 }
