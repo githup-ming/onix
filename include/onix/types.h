@@ -14,6 +14,7 @@
 
 #define _packed __attribute__((packed)) //用于定义特殊的结构
 #define _ofp __attribute__((optimize("omit-frame-pointer"))) // 用于省略函数的栈帧
+#define _inline __attribute__((always_inline)) inline
 
 typedef unsigned int size_t;
 typedef char int8;
@@ -30,6 +31,7 @@ typedef char *va_list;
 
 typedef void *handler_t; // 中断处理函数
 typedef u32 time_t;
+typedef u32 idx_t;
 
 
 #endif
