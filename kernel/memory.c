@@ -219,14 +219,14 @@ void mapping_init()
 //获取页目录
 static page_entry_t *get_pde()
 {
-    return (page_entry_t *)(0xfffff000);
+    return (page_entry_t *)(0xfffff000);//对应的物理地址是0x1000
 }
-
+//获取页表
 static page_entry_t *get_pte(u32 vaddr)
 {
     return (page_entry_t *)(0xffc00000 | (DIDX(vaddr) << 12));
 }
-
+// 刷新块表
 static void flush_tlb(u32 vaddr)
 {
     asm volatile("invlpg (%0)" :: "r"(vaddr)
@@ -244,14 +244,15 @@ void memory_test()
     u32 paddr = 0x1400000; //物理地址是确定的
     u32 table = 0x900000; //页表也必须是物理地址
 
-    page_entry_t *pde = get_pde();
-
+    //初始化虚拟地址对应的页目录，页目录存的是页表地址
+    page_entry_t *pde = get_pde();//获取到的是虚拟地址
     page_entry_t *dentry = &pde[DIDX(vaddr)];
     entry_init(dentry, IDX(table));
 
-    page_entry_t *pte = get_pte(vaddr);
+    BMB;
+    //初始化虚拟地址对应的页表，页表存的是物理页地址
+    page_entry_t *pte = get_pte(vaddr);//获取到的是虚拟地址，实际对应的物理地址是0x900000
     page_entry_t *tentry = &pte[TIDX(vaddr)];
-
     entry_init(tentry, IDX(paddr));
     BMB;
 
