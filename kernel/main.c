@@ -14,6 +14,7 @@
 #include <onix/time.h>
 #include <onix/rtc.h>
 #include <onix/memory.h>
+#include <onix/bitmap.h>
 
 void kernel_init()
 {
@@ -25,7 +26,8 @@ void kernel_init()
     // time_init();
     // rtc_init();
 
-    memory_test();
+    // memory_test();
+    bitmap_tests();
     BMB;
 
 
