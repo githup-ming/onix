@@ -26,8 +26,8 @@ void kernel_init()
     // time_init();
     // rtc_init();
 
-    // memory_test();
-    bitmap_tests();
+    memory_test();
+    // bitmap_tests();
     BMB;
 
 

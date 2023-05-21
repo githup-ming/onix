@@ -3,6 +3,7 @@
 #include <onix/assert.h>
 #include <onix/string.h>
 #include <onix/stdlib.h>
+#include <onix/bitmap.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -21,14 +22,16 @@
 // 内核页目录物理地址
 #define KERNEL_PAGE_DIR 0x1000
 
-// 内核页表物理地址
+// 内核页表物理地址,内核所用的内存实际8MB-1MB
 static u32 KERNEL_PAGE_TABLE[] = {
-    0x2000,
-    0x3000,
+    0x2000, //管理 (0 - 0x3FFFFF) 的物理地址，大小4MB
+    0x3000, //管理 (0x400000 - 0x7FFFFF) 的物理地址，大小4MB
 };
 
 #define KERNEL_MEMORY_SIZE (0x100000 * sizeof(KERNEL_PAGE_TABLE))
+#define KERNEL_MAP_BITS 0x4000
 
+bitmap_t kernel_map;// 内核位图
 typedef struct ards_t
 {
     u64 base; //内存基地址
@@ -51,8 +54,7 @@ void memory_init(u32 magic, u32 addr)
     if (magic == ONIX_MAGIC) {
         count = *(u32 *)addr;
         ptr = (ards_t *)(addr + 4);
-        for (size_t i = 0; i < count; i++, ptr++)
-        {
+        for (size_t i = 0; i < count; i++, ptr++) {
             LOGK("memory base 0x%p size 0x%p type %d\n",
                  (u32)ptr->base, (u32)ptr->size, (u32)ptr->type);
 
@@ -105,6 +107,12 @@ void memory_map_init()
         memory_map[i] = 1;
     }
     LOGK("total pages %d free pages %d\n", total_pages, free_pages);
+
+    // 初始化内核虚拟内存位图，需要8位对齐，每个bit管理一页内存
+    u32 length = (IDX(KERNEL_MEMORY_SIZE) - IDX(MEMORY_BASE)) / 8;
+    bitmap_init(&kernel_map, (u8 *)KERNEL_MAP_BITS, length, IDX(MEMORY_BASE));
+    bitmap_scan(&kernel_map, memory_map_pages);
+
 }
 //分配1页物理内存
 static u32 get_page()
@@ -233,37 +241,67 @@ static void flush_tlb(u32 vaddr)
                 : "memory");
 }
 
+// 从位图中找到cout 个连续的页
+static u32 scan_page(bitmap_t *map, u32 count)
+{
+    assert(count > 0);
+    int32 index = bitmap_scan(map, count);
+
+    if (index == EOF) {
+        panic("scan page fail ");
+    }
+    u32 addr = PAGE(index);
+    LOGK("scan page 0x%p count %d\n", addr, count);
+    return addr;
+    
+}
+
+// 与scan_page 相对，重置相应的页
+static void reset_page(bitmap_t *map, u32 addr, u32 count)
+{
+    ASSERT_PAGE(addr);
+    assert(count > 0);
+    u32 index = IDX(addr);
+
+    for (size_t i = 0; i < count; i++) {
+        assert(bitmap_test(map, index + i));
+        bitmap_set(map, index + i, 0);
+    }
+    
+}
+
+// 分配count 个连续的内核页
+u32 alloc_kpage(u32 count)
+{
+    assert(count > 0);
+    u32 vaddr = scan_page(&kernel_map, count);
+    LOGK("alloc kernel page 0x%p count %d\n", vaddr, count);
+    return vaddr;
+}
+
+// 释放 count 个连续的内核页
+void free_kpage(u32 vaddr, u32 count)
+{
+    ASSERT_PAGE(vaddr);
+    assert(count > 0);
+    reset_page(&kernel_map, vaddr, count);
+    LOGK("free kernel page 0x%p count %d\n", vaddr, count);
+}
+
 void memory_test()
 {
-    BMB;
-
-    //将20M 0x1400000 内存映射到 64M 0x400000 的位置
-    // 我们还需要一个页表 0x900000
-
-    u32 vaddr = 0x4000000;// 线性地址几乎可以是任意的
-    u32 paddr = 0x1400000; //物理地址是确定的
-    u32 table = 0x900000; //页表也必须是物理地址
-
-    //初始化虚拟地址对应的页目录，页目录存的是页表地址
-    page_entry_t *pde = get_pde();//获取到的是虚拟地址
-    page_entry_t *dentry = &pde[DIDX(vaddr)];
-    entry_init(dentry, IDX(table));
-
-    BMB;
-    //初始化虚拟地址对应的页表，页表存的是物理页地址
-    page_entry_t *pte = get_pte(vaddr);//获取到的是虚拟地址，实际对应的物理地址是0x900000
-    page_entry_t *tentry = &pte[TIDX(vaddr)];
-    entry_init(tentry, IDX(paddr));
-    BMB;
-
-    int8 * ptr = (int8 *)(0x4000000);
-    ptr[0] = 'a';
-    BMB;
-    entry_init(tentry, IDX(0x1500000));
-    flush_tlb(vaddr);
-    ptr[2] = 'b';
-
-    BMB;
+    u32 *pages = (u32 *)(0x200000);
+    u32 count = 0x7fe;
+    for (size_t i = 0; i < count; i++)
+    {
+        pages[i] = alloc_kpage(1);
+        LOGK("0x%x\n", i);
+    }
+    for (size_t i = 0; i < count; i++)
+    {
+        free_kpage(pages[i], 1);
+    }
+    
 }
 
 
