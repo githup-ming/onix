@@ -82,6 +82,36 @@ void set_interrupt_mask(u32 irq, bool enable)
         outb(port, inb(port) | (1 << irq));
     }
 }
+// 清除 IF 位，返回设置之前的值
+bool interrupt_disable()
+{
+    asm volatile(
+        "pushfl\n"    // 将当前eflag 压入栈中
+        "cli\n"   //清除 IF 位，此时中断已屏蔽
+        "popl %eax\n"   //将压入的eflag 弹到eax中
+        "shrl $9, %eax\n" // 将eax 右移9位得到IF 位
+        "andl $1, %eax\n" // 只需要 IF 位
+    );
+}
+// 获得 IF 位
+bool get_interrupt_state()
+{
+    asm volatile(
+        "pushfl\n"    // 将当前eflag 压入栈中
+        "popl %eax\n"   //将压入的eflag 弹到eax中
+        "shrl $9, %eax\n" // 将eax 右移9位得到IF 位
+        "andl $1, %eax\n" // 只需要 IF 位
+    );
+}
+// 设置 IF 位
+void set_interrupt_state(bool state)
+{
+    if (state) {
+        asm volatile("sti\n");
+    } else {
+        asm volatile("cli\n");
+    }
+}
 
 static u32 counter = 0;
 

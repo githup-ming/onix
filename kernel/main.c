@@ -16,6 +16,15 @@
 #include <onix/memory.h>
 #include <onix/bitmap.h>
 
+
+void intr_test()
+{
+    bool intr = interrupt_disable();
+
+
+    set_interrupt_state(intr);
+}
+
 void kernel_init()
 {
     memory_map_init();
@@ -26,9 +35,22 @@ void kernel_init()
     // time_init();
     // rtc_init();
 
-    memory_test();
+    // memory_test();
     // bitmap_tests();
+    // BMB;
+    bool intr = interrupt_disable();
+    set_interrupt_state(true);
+
+    LOGK("%d\n",intr);
+    LOGK("%d\n",get_interrupt_state());
+
     BMB;
+
+    intr = interrupt_disable();
+    LOGK("%d\n",intr);
+    LOGK("%d\n",get_interrupt_state());
+
+
 
 
     // asm volatile("sti");//开中断

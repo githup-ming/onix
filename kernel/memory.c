@@ -218,9 +218,9 @@ void mapping_init()
     page_entry_t *entry = &pde[1023];
     entry_init(entry, IDX(KERNEL_PAGE_DIR));
 
-    BMB;
+
     set_cr3((u32)pde);
-    BMB;
+
     enable_page();
 
 }
@@ -291,16 +291,18 @@ void free_kpage(u32 vaddr, u32 count)
 void memory_test()
 {
     u32 *pages = (u32 *)(0x200000);
-    u32 count = 0x7fe;
-    for (size_t i = 0; i < count; i++)
+    u32 count = 0x6fe;
+    for (size_t i = 0; i < count/2; i++)
     {
-        pages[i] = alloc_kpage(1);
+        pages[i] = alloc_kpage(2);
         LOGK("0x%x\n", i);
     }
-    for (size_t i = 0; i < count; i++)
+    for (size_t i = 0; i < count/2; i++)
     {
         free_kpage(pages[i], 1);
+        pages[i] = 0;
     }
+    free_kpage(pages[count/2], 1);
     
 }
 
