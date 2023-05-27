@@ -35,6 +35,7 @@ detect_memory:
 
     ; xchg bx, bx; bochs 魔术断点
 
+    ; 实模式下不修改段寄存器，只能访问64k内存，0xb8000,超过了64k，可以看出并没有修改成功
     ; mov byte [0xb8000], 'P'
 
     jmp prepare_protected_mode
@@ -46,13 +47,14 @@ prepare_protected_mode:
     ; xchg bx,bx
     cli; 关闭中断
 
+    ;打开 A20 线
     in al, 0x92
     or al, 0b10
     out 0x92, al
     ;加载gdt
     lgdt [gdt_ptr]
 
-    ;启动保护mos
+    ;启动保护模式，cr0 第0位置1
     mov eax, cr0
     or eax, 1
     mov cr0, eax
@@ -94,7 +96,7 @@ protect_mode:
     mov es, ax
     mov fs, ax
     mov gs, ax
-    mov ss , ax; 初始化段寄存器
+    mov ss, ax; 初始化段寄存器
 
     mov esp, 0x10000; 修改栈顶
 
@@ -194,30 +196,33 @@ data_selector equ (2 << 3)
 
 
 memory_base equ 0; 内存开始的位置；基地址
-
+; 4GB / 4KB - 1
 memory_limit equ ((1024 * 1024 *1024 * 4) / (1024 * 4)) -1
 
 gdt_ptr:
     dw (gdt_end -gdt_base) -1
     dd gdt_base
 
-gdt_base:
-    dd 0, 0;NULL 描述符
+gdt_base: ; 第0个段全局描述符
+    dd 0, 0;NULL 描述符，dd 占4个字节,两个0 占8个字节
 
-gdt_code:
+gdt_code: ; 第1个段全局描述符
     dw memory_limit & 0xffff; 段界限0-15
     dw memory_base & 0xffff; 基地址0-15
     db (memory_base >> 16) & 0xff; 基地址16-23
-    db 0b_1_00_1_1_0_1_0; 存在 dpl 0 代码
-    db 0b1_1_0_0_0000| (memory_limit >> 16) & 0xf;
+    ;存在 - dlp=0 - S - 代码 - 非依从 - 可读 - 没有被访问过
+    db 0b_1_00_1_1_0_1_0
+    ;4k - 32bit - 非64位 - 保留位 - 段界限16-19
+    db 0b1_1_0_0_0000| ((memory_limit >> 16) & 0xf)
     db (memory_base >> 24) & 0xff
 
-gdt_data:
+gdt_data: ; 第2个段全局描述符
     dw memory_limit & 0xffff; 段界限0-15
     dw memory_base & 0xffff; 基地址0-16
     db (memory_base >> 16) & 0xff;
+    ;存在 - dlp=0 - S - 数据 - 向上 - 可写 - 没有被访问过
     db 0b_1_00_1_0_0_1_0; 存在 dpl 0 代码
-    db 0b1_1_0_0_0000| (memory_limit >> 16) & 0xf;
+    db 0b1_1_0_0_0000| ((memory_limit >> 16) & 0xf)
     db (memory_base >> 24) & 0xff
 
 gdt_end:
