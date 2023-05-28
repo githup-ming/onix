@@ -3,7 +3,7 @@
 
 #include <onix/types.h>
 
-typedef struct bitmap_t
+typedef struct bitmap
 {
     u8 *bits; //位图缓冲区
     u32 length; //位图缓冲区长度

@@ -3,6 +3,9 @@
 
 #include <onix/types.h>
 
+// 内核页目录物理地址
+#define KERNEL_PAGE_DIR 0x1000
+
 #define MEMORY_BASE 0x100000 // 1M，可用内存开始的位置
 #define PAGE_SIZE 0x1000     // 一页的大小 4K
 

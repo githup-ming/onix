@@ -19,9 +19,6 @@
 #define PAGE(idx) ((u32)idx << 12) //获取索引所在页开始的位置
 #define ASSERT_PAGE(addr) assert((addr & 0xfff) == 0) //断言是否是一个页的地址
 
-// 内核页目录物理地址
-#define KERNEL_PAGE_DIR 0x1000
-
 // 内核页表物理地址,内核所用的内存实际8MB-1MB
 static u32 KERNEL_PAGE_TABLE[] = {
     0x2000, //管理 (0 - 0x3FFFFF) 的物理地址，大小4MB
