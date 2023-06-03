@@ -31,7 +31,7 @@ typedef struct task_t
     u32 priority; // 任务优先级
     u32 ticks; // 剩余时间片
     u32 jiffies; // 上次执行时全局的时间片
-    u32 name[TASK_NAME_LEN]; //任务名
+    u8 name[TASK_NAME_LEN]; //任务名
     u32 uid; // 用户id
     u32 pde; // 页目录地址
     bitmap_t *vmap; // 进程虚拟内存位图

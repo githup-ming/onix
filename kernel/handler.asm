@@ -21,11 +21,11 @@ interrupt_entry:
     push es
     push fs
     push gs
-    pusha
+    pusha ;8个 eax ecx edx ebx esp ebp esi edi
 
-    mov eax, [esp + 12 * 4]; esp是最后压入栈的数据，对应上面的push 1%
+    mov eax, [esp + 12 * 4]; esp是最后压入栈的数据，对应上面的push 1%ssss
 
-    push eax; 向中断函数提供参数
+    push eax; 向中断函数提供参数，调用函数前最后压入栈中的是函数的第一个参数
 
     ; 调用中断处理函数，handler_table 中储存了中断处理函数的指针
     call [handler_table + eax * 4]
@@ -38,7 +38,7 @@ interrupt_entry:
     pop es
     pop ds
 
-    add esp, 8; 对应push %1 ,error
+    add esp, 8; 对应push %1 和 error
 
     iret
 
@@ -55,7 +55,7 @@ INTERRUPT_HANDLER 0x09, 0; 除0 异常
 INTERRUPT_HANDLER 0x0a, 1; 除0 异常
 INTERRUPT_HANDLER 0x0b, 1; 除0 异常
 INTERRUPT_HANDLER 0x0c, 1; 除0 异常
-INTERRUPT_HANDLER 0x0d, 1; 除0 异常
+INTERRUPT_HANDLER 0x0d, 1; 一般性保护异常
 INTERRUPT_HANDLER 0x0e, 1; 除0 异常
 INTERRUPT_HANDLER 0x0f, 0; 除0 异常
 INTERRUPT_HANDLER 0x10, 0; 除0 异常
@@ -74,7 +74,7 @@ INTERRUPT_HANDLER 0x1c, 0; reserved
 INTERRUPT_HANDLER 0x1d, 0; reserved
 INTERRUPT_HANDLER 0x1e, 0; reserved
 INTERRUPT_HANDLER 0x1f, 0; reserved
-
+; 0 - 0x1f 是异常，0x20 - 0xff 是外中断或者软中断
 INTERRUPT_HANDLER 0x20, 0; clock 时钟中断
 INTERRUPT_HANDLER 0x21, 0; 除0 异常
 INTERRUPT_HANDLER 0x22, 0; 除0 异常
