@@ -15,7 +15,7 @@
 #include <onix/rtc.h>
 #include <onix/memory.h>
 #include <onix/bitmap.h>
-
+#include <onix/gate.h>
 
 void intr_test()
 {
