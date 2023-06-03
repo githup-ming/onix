@@ -39,6 +39,7 @@ $(BUILD)/kernel/kernel.bin: \
 	$(BUILD)/kernel/debug.o \
 	$(BUILD)/kernel/global.o \
 	$(BUILD)/kernel/task.o \
+	$(BUILD)/kernel/gate.o \
 	$(BUILD)/kernel/schedule.o \
 	$(BUILD)/kernel/interrupt.o \
 	$(BUILD)/kernel/handler.o \

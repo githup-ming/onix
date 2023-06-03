@@ -30,17 +30,18 @@ void kernel_init()
     memory_map_init();
     mapping_init();
     interrupt_init();
+    syscall_init();
 
-    clock_init();
-    // time_init();
-    // rtc_init();
-    task_init();
-    // memory_test();
-    // bitmap_tests();
+    // clock_init();
+    // // time_init();
+    // // rtc_init();
+    // task_init();
+    // // memory_test();
+    // // bitmap_tests();
 
-    set_interrupt_state(true);
+    // set_interrupt_state(true);
 
 
-    DEBUGK("kernel_init end\n");
-    hang();
+    // DEBUGK("kernel_init end\n");
+    // hang();
 }

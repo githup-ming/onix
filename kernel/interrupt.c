@@ -22,6 +22,7 @@ pointer_t idt_ptr;
 
 handler_t handler_table[IDT_SIZE];
 extern handler_t handler_entry_table[ENTRY_SIZE];
+extern void syscall_handler();
 
 static int8 *messages[] = {
     "#DE Divide Error\0",
@@ -187,6 +188,18 @@ static void idt_init()
     for (size_t i = 0x20; i < ENTRY_SIZE; i++) {
         handler_table[i] = default_handler;
     }
+
+    gate_t *gate = &idt[0x80];
+    handler_t handler = syscall_handler;
+
+    gate->offset0 = (u32)handler & 0xffff;
+    gate->offset1 = ((u32)handler >> 16) & 0xffff;
+    gate->selector = 1 << 3;// 代码段
+    gate->reserved = 0;
+    gate->type = 0b1110; //中断门
+    gate->segment = 0;  //系统段
+    gate->DPL = 3; //用户态
+    gate->present = 1;  //有效
 
     idt_ptr.base = (u32)idt;
     idt_ptr.limit = sizeof(idt) - 1;

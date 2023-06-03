@@ -1,6 +1,7 @@
 #include <onix/console.h>
 #include <onix/io.h>
 #include <onix/string.h>
+#include <onix/interrupt.h>
 
 #define CRT_ADDR_REG 0x3D4 // CRT(6845)索引寄存器
 #define CRT_DATA_REG 0x3D5 // CRT(6845)数据寄存器
@@ -177,6 +178,8 @@ extern void start_beep();
 void console_write(int8 *buf, u32 count)
 {
     int8 ch;
+    bool intr = interrupt_disable();// 禁止中断
+    
     while (count--)
     {
         ch = *buf++;
@@ -236,4 +239,5 @@ void console_write(int8 *buf, u32 count)
         }
         set_cursor(console.xy);
     }
+    set_interrupt_state(intr);// 恢复中断
 }
