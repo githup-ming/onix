@@ -8,6 +8,7 @@
 #include <onix/bitmap.h>
 #include <onix/syscall.h>
 #include <onix/list.h>
+#include <onix/thread.h>
 
 extern bitmap_t kernel_map;
 extern void task_switch(task_t *next);
@@ -15,6 +16,7 @@ extern void task_switch(task_t *next);
 #define NR_TASKS 64
 static task_t *task_table[NR_TASKS];// 任务表
 static list_t block_list;// 任务默认阻塞链表
+static task_t *idle_task;// 空闲任务
 
 //从task_table中获得一个空闲任务
 static task_t *get_free_task()
@@ -53,6 +55,11 @@ static task_t *task_search(task_state_t state)
             task = ptr;
         }
     }
+
+    if (task == NULL && state == TASK_READY) {
+        task = idle_task;
+    }
+    
     return task;
 }
 
@@ -166,44 +173,15 @@ void task_yield()
     schedule();
 }
 
-u32 thread_a()
-{
-    set_interrupt_state(true);
-    while (true)
-    {
-        printk("a");
-        test();
-    }
-}
-
-u32 thread_b()
-{
-    set_interrupt_state(true);
-    while (true)
-    {
-        printk("b");
-        test();
-    }
-}
-u32 thread_c()
-{
-    set_interrupt_state(true);
-    while (true)
-    {
-        printk("c");
-        test();
-    }
-}
-
-
+// task 初始化
 void task_init()
 {
     list_init(&block_list);
 
     task_setup();
 
-    task_creat(thread_a, "a", 5, KERNEL_USER);
-    task_creat(thread_b, "b", 5, KERNEL_USER);
-    // task_creat(thread_c, "c", 5, KERNEL_USER);
+    idle_task = task_creat(idle_thread, "idle", 1, KERNEL_USER);
+    task_creat(init_thread, "init", 5, NORMAL_USER);
+
 
 }
