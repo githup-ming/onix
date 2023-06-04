@@ -1,6 +1,8 @@
 #include <onix/interrupt.h>
 #include <onix/assert.h>
 #include <onix/debug.h>
+#include <onix/syscall.h>
+#include <onix/task.h>
 
 #define SYSCALL_SIZE 64
 
@@ -32,6 +34,7 @@ void syscall_init()
     {
         syscall_table[i] = sys_default;
     }
-    syscall_table[0] = sys_test;
+    syscall_table[SYS_NR_TEST] = sys_test;
+    syscall_table[SYS_NR_YIELD] = task_yield;
     
 }

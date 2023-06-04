@@ -17,31 +17,23 @@
 #include <onix/bitmap.h>
 #include <onix/gate.h>
 
-void intr_test()
-{
-    bool intr = interrupt_disable();
-
-
-    set_interrupt_state(intr);
-}
-
 void kernel_init()
 {
     memory_map_init();
     mapping_init();
     interrupt_init();
-    syscall_init();
 
-    // clock_init();
+    clock_init();
     // // time_init();
     // // rtc_init();
-    // task_init();
+    task_init();
+    syscall_init();
     // // memory_test();
     // // bitmap_tests();
 
-    // set_interrupt_state(true);
+    set_interrupt_state(true);
 
 
-    // DEBUGK("kernel_init end\n");
+    LOGK("kernel_init end\n");
     // hang();
 }

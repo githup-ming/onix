@@ -159,7 +159,7 @@ handler_entry_table:
  extern syscall_table
  global syscall_handler
  syscall_handler:
-    xchg bx, bx
+    ; xchg bx, bx
 
     ; 验证系统调用号
     push eax
@@ -178,7 +178,7 @@ handler_entry_table:
     pusha
 
     push 0x80; 向中断处理函数传递中断号
-    xchg bx, bx
+    ; xchg bx, bx
 
     push edx; 第三个参数
     push ecx;第二个参数
@@ -187,7 +187,7 @@ handler_entry_table:
     ; 调用系统调用处理函数
     call [syscall_table + eax * 4]
 
-    xchg bx, bx
+    ; xchg bx, bx
     add esp, 12
 
     ; 修改栈中 eax ，设置系统调用返回值
