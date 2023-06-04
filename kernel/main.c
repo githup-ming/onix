@@ -32,8 +32,8 @@ void kernel_init()
     // // memory_test();
     // // bitmap_tests();
 
-    list_test();
-    // set_interrupt_state(true);
+    // list_test();
+    set_interrupt_state(true);
 
 
     LOGK("kernel_init end\n");

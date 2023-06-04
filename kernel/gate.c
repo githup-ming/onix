@@ -21,10 +21,21 @@ static void sys_default()
 {
     panic("syscall not implemented");
 }
+task_t *task = NULL;
 
 static u32 sys_test()
 {
-    LOGK("syscall test...\n");
+    // LOGK("syscall test...\n");
+
+    if (!task)
+    {
+        task = running_task();
+        task_block(task, NULL, TASK_BLOCKED);
+    } else {
+        task_unblock(task);
+        task = NULL;
+    }
+    
     return 255;
 }
 
