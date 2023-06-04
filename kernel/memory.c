@@ -248,7 +248,7 @@ static u32 scan_page(bitmap_t *map, u32 count)
         panic("scan page fail ");
     }
     u32 addr = PAGE(index);
-    LOGK("scan page 0x%p count %d\n", addr, count);
+    // LOGK("scan page 0x%p count %d\n", addr, count);
     return addr;
     
 }

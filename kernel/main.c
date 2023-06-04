@@ -16,6 +16,7 @@
 #include <onix/memory.h>
 #include <onix/bitmap.h>
 #include <onix/gate.h>
+#include <onix/list.h>
 
 void kernel_init()
 {
@@ -31,7 +32,8 @@ void kernel_init()
     // // memory_test();
     // // bitmap_tests();
 
-    set_interrupt_state(true);
+    list_test();
+    // set_interrupt_state(true);
 
 
     LOGK("kernel_init end\n");
