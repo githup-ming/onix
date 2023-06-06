@@ -41,6 +41,7 @@ void clock_handler(int32 vector)
     assert(vector == 0x20);
     send_eoi(vector);
     stop_beep();
+    task_wakeup();
 
     jiffies++;
 

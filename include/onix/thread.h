@@ -4,8 +4,9 @@
 #include <onix/types.h>
 
 
-u32 idle_thread();
-u32 init_thread();
+void idle_thread();
+void init_thread();
+void test_thread();
 
 
 

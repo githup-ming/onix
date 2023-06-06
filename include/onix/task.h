@@ -12,7 +12,7 @@
 
 
 
-typedef u32 target_t();
+typedef void target_t();
 
 typedef enum task_state
 {
@@ -62,5 +62,7 @@ void task_block(task_t *task, list_t *blist, task_state_t state);
 // 任务解除阻塞
 void task_unblock(task_t *task);
 
+void task_wakeup();
+void task_sleep();
 
 #endif

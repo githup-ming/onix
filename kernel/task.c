@@ -10,12 +10,15 @@
 #include <onix/list.h>
 #include <onix/thread.h>
 
+extern u32 volatile jiffies;//全局时间片
+extern u32 jiffy;//1个时间片的毫秒值
 extern bitmap_t kernel_map;
 extern void task_switch(task_t *next);
 
 #define NR_TASKS 64
 static task_t *task_table[NR_TASKS];// 任务表
 static list_t block_list;// 任务默认阻塞链表
+static list_t sleep_list;// 任务睡眠链表
 static task_t *idle_task;// 空闲任务
 
 //从task_table中获得一个空闲任务
@@ -166,6 +169,59 @@ void task_unblock(task_t *task)
 
     task->state = TASK_READY;
 }
+// 任务进入睡眠
+void task_sleep(u32 ms)
+{
+    assert(!get_interrupt_state());
+
+    u32 ticks = ms / jiffy;//需要睡眠的时间片
+    ticks = ticks > 0 ? ticks: 1;
+
+    //记录目标时间片，在那个时刻需要唤醒
+    task_t *current = running_task();
+    current->ticks = jiffies + ticks;
+
+    // 插入到睡眠链表，并按唤醒时间从小到大排序
+    list_t *list = &sleep_list;
+    list_node_t *anchor = &list->tail;
+
+    for (list_node_t *ptr = list->head.next; ptr != &list->tail; ptr = ptr->next) {
+        task_t *task = element_entry(task_t, node, ptr);
+        if (task->ticks > current->ticks) {
+            anchor = ptr;
+            break;
+        }
+    }
+    // 插入链表
+    list_insert_before(anchor, &current->node);
+
+    // 阻塞状态是睡眠
+    current->state = TASK_SLEEPING;
+
+    // 调度到其他任务
+    schedule();
+    
+
+}
+
+void task_wakeup()
+{
+    assert(!get_interrupt_state());
+
+    // 从睡眠链表中找到 ticks 小于 jiffies 的任务 ，恢复执行
+    list_t *list = &sleep_list;
+    for (list_node_t *ptr = list->head.next; ptr != &list->tail;) {
+        task_t *task = element_entry(task_t, node, ptr);
+        if (task->ticks > jiffies) {
+            break;
+        }
+        
+        ptr = ptr->next;
+
+        task->ticks = 0;
+        task_unblock(task);
+    }
+}
 
 // 任务切换
 void task_yield()
@@ -177,11 +233,12 @@ void task_yield()
 void task_init()
 {
     list_init(&block_list);
+    list_init(&sleep_list);
 
     task_setup();
 
     idle_task = task_creat(idle_thread, "idle", 1, KERNEL_USER);
     task_creat(init_thread, "init", 5, NORMAL_USER);
-
-
+    // task_creat(test_thread, "test", 5, KERNEL_USER);
+    
 }

@@ -15,7 +15,7 @@
 #include <onix/rtc.h>
 #include <onix/memory.h>
 #include <onix/bitmap.h>
-#include <onix/gate.h>
+#include <onix/syscall.h>
 #include <onix/list.h>
 
 void kernel_init()
@@ -37,5 +37,5 @@ void kernel_init()
 
 
     LOGK("kernel_init end\n");
-    // hang();
+    hang();
 }
