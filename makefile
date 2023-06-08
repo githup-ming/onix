@@ -41,6 +41,7 @@ $(BUILD)/kernel/kernel.bin: \
 	$(BUILD)/kernel/task.o \
 	$(BUILD)/kernel/thread.o \
 	$(BUILD)/kernel/schedule.o \
+	$(BUILD)/kernel/mutex.o \
 	$(BUILD)/kernel/interrupt.o \
 	$(BUILD)/kernel/handler.o \
 	$(BUILD)/kernel/clock.o \

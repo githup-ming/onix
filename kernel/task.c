@@ -239,6 +239,6 @@ void task_init()
 
     idle_task = task_creat(idle_thread, "idle", 1, KERNEL_USER);
     task_creat(init_thread, "init", 5, NORMAL_USER);
-    // task_creat(test_thread, "test", 5, KERNEL_USER);
+    task_creat(test_thread, "test", 5, KERNEL_USER);
     
 }

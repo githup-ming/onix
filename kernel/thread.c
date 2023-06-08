@@ -21,15 +21,22 @@ void idle_thread()
     }
 
 }
+#include <onix/mutex.h>
+
+mutex_t mutex;
+
 
 void init_thread()
 {
+    mutex_init(&mutex);
     set_interrupt_state(true);
 
     while (true)
     {
+        mutex_lock(&mutex);
         LOGK("init task ...\n");
-        sleep(100);
+        mutex_unlock(&mutex);
+        // sleep(100);
     }
 
 }
@@ -40,8 +47,10 @@ void test_thread()
 
     while (true)
     {
+        mutex_lock(&mutex);
         LOGK("test_thread task ...\n");
-        sleep(3000);
+        mutex_unlock(&mutex);
+        // sleep(3000);
     }
 
 }
