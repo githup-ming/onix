@@ -23,19 +23,19 @@ void idle_thread()
 }
 #include <onix/mutex.h>
 
-mutex_t mutex;
+spinlock_t lock;
 
 
 void init_thread()
 {
-    mutex_init(&mutex);
+    spin_init(&lock);
     set_interrupt_state(true);
 
     while (true)
     {
-        mutex_lock(&mutex);
+        // spin_lock(&lock);
         LOGK("init task ...\n");
-        mutex_unlock(&mutex);
+        // spin_unlock(&lock);
         // sleep(100);
     }
 
@@ -47,9 +47,9 @@ void test_thread()
 
     while (true)
     {
-        mutex_lock(&mutex);
+        // spin_lock(&lock);
         LOGK("test_thread task ...\n");
-        mutex_unlock(&mutex);
+        // spin_unlock(&lock);
         // sleep(3000);
     }
 
