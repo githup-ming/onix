@@ -113,7 +113,7 @@ protect_mode:
     mov byte [0xb8000], 'L'
     ; xchg bx, bx; bochs 魔术断点
 
-    jmp dword code_selector:0x10000; 跳转到代码段
+    jmp dword code_selector:0x10040; 跳转到代码段
 
     ud2; 表示出错
 
